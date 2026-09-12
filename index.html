@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>구구단 몬스터</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#EAF6FF">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="구구단 몬스터">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky:#EAF6FF;
+    --sky-deep:#CFEBFF;
+    --sun:#FFD93D;
+    --sun-deep:#F5B700;
+    --coral:#FF6B6B;
+    --coral-deep:#E24A4A;
+    --leaf:#4ECDC4;
+    --leaf-deep:#2FA79D;
+    --grape:#7B6FDE;
+    --grape-deep:#5B4FC4;
+    --navy:#2B2D42;
+    --navy-soft:#5B5D77;
+    --white:#FFFFFF;
+    --card-shadow: 0 6px 0 rgba(43,45,66,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 8%, var(--sky-deep) 0%, transparent 40%),
+      radial-gradient(circle at 90% 85%, #D9F7EF 0%, transparent 45%),
+      var(--sky);
+    font-family:'Jua', sans-serif;
+    color:var(--navy);
+    display:flex;
+    justify-content:center;
+    overflow-x:hidden;
+  }
+  .app{
+    width:100%;
+    max-width:460px;
+    min-height:100vh;
+    padding:20px 18px 40px;
+    position:relative;
+  }
+  .sound-toggle{
+    position:absolute;
+    top:14px;
+    right:14px;
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:50%;
+    background:var(--white);
+    box-shadow:0 3px 0 rgba(43,45,66,0.10);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index:10;
+  }
+  h1,h2,.title-font{font-family:'Jua', sans-serif; font-weight:400;}
+  .screen{display:none; animation:fadeIn .35s ease;}
+  .screen.active{display:block;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ---------- 시작 화면 ---------- */
+  .hero{
+    text-align:center;
+    padding:18px 0 6px;
+  }
+  .hero h1{
+    font-size:31px;
+    line-height:1.3;
+    color:var(--navy);
+    margin:10px 0 4px;
+  }
+  .hero p{
+    font-size:18px;
+    color:var(--navy-soft);
+    margin:0 0 14px;
+  }
+  .mascot-wrap{
+    display:flex;
+    justify-content:center;
+    margin:6px 0 4px;
+  }
+  .mascot{width:150px; height:150px;}
+  .float{animation:float 3s ease-in-out infinite;}
+  @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+  .sparkle{animation:twinkle 1.4s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.25;}50%{opacity:1;}}
+
+  .level-card{
+    background:var(--white);
+    border-radius:18px;
+    padding:12px 16px;
+    margin:14px 0 4px;
+    box-shadow:0 4px 0 rgba(43,45,66,0.08);
+  }
+  .level-card-top{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .level-badge{
+    font-family:'Jua', sans-serif;
+    background:var(--grape);
+    color:var(--white);
+    font-size:16px;
+    padding:3px 10px;
+    border-radius:999px;
+  }
+  .level-name{font-size:17px; color:var(--navy);}
+  .xp-track{
+    width:100%;
+    height:10px;
+    background:var(--sky-deep);
+    border-radius:999px;
+    overflow:hidden;
+  }
+  .xp-fill{
+    height:100%;
+    background:var(--sun);
+    border-radius:999px;
+    transition:width .3s ease;
+  }
+  .xp-text{font-size:15px; color:var(--navy-soft); margin-top:6px; text-align:right;}
+
+  .attendance-card{
+    background:var(--white);
+    border-radius:18px;
+    padding:14px 16px;
+    margin:10px 0 4px;
+    box-shadow:0 4px 0 rgba(43,45,66,0.08);
+  }
+  .attendance-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .attendance-title{font-size:17px; color:var(--navy);}
+  .attendance-streak{font-family:'Jua', sans-serif; font-size:16px; color:var(--coral-deep);}
+  .att-grid{
+    display:grid;
+    grid-template-columns:repeat(7, 1fr);
+    gap:4px;
+  }
+  .att-cell{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    padding:6px 0 4px;
+    border-radius:10px;
+  }
+  .att-cell.today{background:var(--sky-deep);}
+  .att-dow{font-size:12px; color:var(--navy-soft);}
+  .att-stamp{height:18px; display:flex; align-items:center; justify-content:center;}
+  .att-stamp svg{width:18px; height:18px; display:block;}
+  .att-date{font-size:13px; color:var(--navy-soft);}
+  .att-cell.stamped .att-date{color:var(--leaf-deep);}
+  .attendance-total{font-size:15px; color:var(--navy-soft); text-align:right; margin-top:8px;}
+  .attendance-stamp-big{display:flex; justify-content:center; margin-bottom:4px;}
+  .attendance-stamp-big svg{width:64px; height:64px; display:block;}
+
+  .reset-wrap{text-align:center; margin-top:14px;}
+  .reset-link, .reset-yes, .reset-no{
+    background:none;
+    border:none;
+    color:var(--navy-soft);
+    font-size:15px;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:4px;
+    font-family:'Jua', sans-serif;
+  }
+  .reset-confirm{display:none; margin-top:4px;}
+  .reset-confirm span{font-size:15px; color:var(--navy-soft); margin-right:4px;}
+
+  .section-label{
+    font-size:18px;
+    color:var(--navy);
+    margin:18px 2px 10px;
+  }
+  .nickname-input{
+    display:block;
+    width:100%;
+    font-family:'Jua', sans-serif;
+    font-size:24px;
+    text-align:center;
+    color:var(--navy);
+    background:var(--white);
+    border:none;
+    border-radius:18px;
+    padding:16px 12px;
+    box-shadow:0 4px 0 rgba(43,45,66,0.10);
+    margin-bottom:6px;
+  }
+  .nickname-input::placeholder{color:var(--navy-soft); opacity:0.7;}
+  .nickname-error{color:var(--coral-deep); text-align:center;}
+  .nickname-tag{
+    font-family:'Jua', sans-serif;
+    font-size:15px;
+    color:var(--grape-deep);
+    margin-bottom:6px;
+  }
+  .dan-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+  }
+  .dan-btn{
+    font-family:'Jua', sans-serif;
+    font-size:24px;
+    padding:16px 0;
+    border:none;
+    border-radius:16px;
+    background:var(--white);
+    color:var(--navy);
+    box-shadow:0 4px 0 rgba(43,45,66,0.10);
+    cursor:pointer;
+    transition:transform .12s ease;
+  }
+  .dan-btn span{display:block; font-family:'Jua',sans-serif; font-size:13px; color:var(--navy-soft); margin-top:2px;}
+  .dan-btn:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(43,45,66,0.10);}
+  .dan-btn.selected{
+    background:var(--sun);
+    box-shadow:0 4px 0 var(--sun-deep);
+    color:var(--navy);
+  }
+  .all-btn{
+    width:100%;
+    margin-top:10px;
+    padding:14px 0;
+    border:none;
+    border-radius:16px;
+    background:var(--white);
+    color:var(--navy);
+    font-family:'Jua', sans-serif;
+    font-size:20px;
+    box-shadow:0 4px 0 rgba(43,45,66,0.10);
+    cursor:pointer;
+  }
+  .all-btn.selected{
+    background:var(--leaf);
+    box-shadow:0 4px 0 var(--leaf-deep);
+  }
+  .start-btn{
+    width:100%;
+    margin-top:22px;
+    padding:18px 0;
+    border:none;
+    border-radius:20px;
+    background:var(--coral);
+    box-shadow:0 5px 0 var(--coral-deep);
+    color:var(--white);
+    font-family:'Jua', sans-serif;
+    font-size:24px;
+    cursor:pointer;
+    transition:transform .1s ease;
+  }
+  .start-btn:active{transform:translateY(4px); box-shadow:0 1px 0 var(--coral-deep);}
+  .start-btn:disabled{
+    background:#C9CAD6;
+    box-shadow:0 5px 0 #ADAEC0;
+    cursor:not-allowed;
+  }
+  .hint{
+    text-align:center;
+    font-size:16px;
+    color:var(--navy-soft);
+    margin-top:8px;
+    min-height:16px;
+  }
+
+  /* ---------- 게임 화면 ---------- */
+  .game-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .pill{
+    background:var(--white);
+    border-radius:999px;
+    padding:8px 14px;
+    font-size:16px;
+    box-shadow:0 3px 0 rgba(43,45,66,0.08);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .pill b{font-family:'Jua', sans-serif; font-size:18px;}
+  .progress-track{
+    width:100%;
+    height:12px;
+    background:var(--white);
+    border-radius:999px;
+    overflow:hidden;
+    box-shadow:inset 0 2px 0 rgba(43,45,66,0.06);
+    margin-bottom:16px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--leaf);
+    border-radius:999px;
+    transition:width .3s ease;
+  }
+  .mascot-stage{
+    display:flex;
+    justify-content:center;
+    margin:6px 0 6px;
+    position:relative;
+    height:120px;
+  }
+  .speech{
+    position:absolute;
+    top:-6px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--white);
+    padding:6px 14px;
+    border-radius:14px;
+    font-size:16px;
+    box-shadow:0 3px 0 rgba(43,45,66,0.08);
+    white-space:nowrap;
+    opacity:0;
+    transition:opacity .2s ease;
+  }
+  .speech.show{opacity:1;}
+  .speech.correct{background:var(--leaf); color:var(--white);}
+  .speech.wrong{background:var(--coral); color:var(--white);}
+  .question-card{
+    background:var(--white);
+    border-radius:24px;
+    box-shadow:var(--card-shadow);
+    padding:28px 20px;
+    text-align:center;
+    margin-bottom:18px;
+  }
+  .question-card .q{
+    font-family:'Jua', sans-serif;
+    font-size:46px;
+    color:var(--navy);
+    letter-spacing:1px;
+  }
+  .choices{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:12px;
+  }
+  .choice-btn{
+    font-family:'Jua', sans-serif;
+    font-size:29px;
+    padding:20px 0;
+    border:none;
+    border-radius:18px;
+    background:var(--white);
+    box-shadow:0 4px 0 rgba(43,45,66,0.10);
+    color:var(--navy);
+    cursor:pointer;
+  }
+  .choice-btn:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(43,45,66,0.10);}
+  .choice-btn.correct{
+    background:var(--leaf);
+    box-shadow:0 4px 0 var(--leaf-deep);
+    color:var(--white);
+  }
+  .choice-btn.wrong{
+    background:var(--coral);
+    box-shadow:0 4px 0 var(--coral-deep);
+    color:var(--white);
+  }
+  .choice-btn:disabled{opacity:.55;}
+  .shake{animation:shake .35s ease;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-8px);}
+    40%{transform:translateX(8px);}
+    60%{transform:translateX(-6px);}
+    80%{transform:translateX(6px);}
+  }
+  .bounce{animation:bounce .4s ease;}
+  @keyframes bounce{
+    0%{transform:scale(1);}
+    40%{transform:scale(1.15);}
+    100%{transform:scale(1);}
+  }
+
+  /* ---------- 레벨업 오버레이 ---------- */
+  .levelup-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(43,45,66,0.55);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:50;
+    padding:20px;
+  }
+  .levelup-overlay.show{opacity:1; pointer-events:auto;}
+  .levelup-card{
+    background:var(--white);
+    border-radius:24px;
+    padding:26px 22px;
+    text-align:center;
+    max-width:300px;
+    width:100%;
+    box-shadow:0 8px 0 rgba(43,45,66,0.18);
+    transform:scale(.85);
+    transition:transform .25s ease;
+  }
+  .levelup-overlay.show .levelup-card{transform:scale(1);}
+  .levelup-mascot-wrap{display:flex; justify-content:center; margin-bottom:2px;}
+  .levelup-mascot-wrap .mascot{width:120px; height:120px;}
+  .levelup-label{font-family:'Jua', sans-serif; font-size:27px; color:var(--grape-deep); margin-bottom:4px;}
+  .levelup-name{font-size:18px; color:var(--navy-soft); margin-bottom:18px;}
+  .confetti-piece{
+    position:absolute;
+    top:-20px;
+    border-radius:50% 50% 50% 0;
+    pointer-events:none;
+    animation-name:confetti-fall;
+    animation-timing-function:ease-in;
+    animation-fill-mode:forwards;
+    z-index:60;
+  }
+  @keyframes confetti-fall{
+    0%{ transform:translateY(0) rotate(0deg); opacity:1; }
+    100%{ transform:translateY(360px) rotate(420deg); opacity:0; }
+  }
+
+  /* ---------- 결과 화면 ---------- */
+  .result-wrap{text-align:center; padding-top:10px;}
+  .stars{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin:14px 0 6px;
+  }
+  .star{
+    width:46px; height:46px;
+    opacity:.25;
+    transform:scale(.7);
+    transition:all .25s ease;
+  }
+  .star.on{opacity:1; transform:scale(1);}
+  .result-title{font-family:'Jua', sans-serif; font-size:29px; margin:6px 0 2px;}
+  .result-sub{font-size:18px; color:var(--navy-soft); margin-bottom:18px;}
+  .stat-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .stat-box{
+    background:var(--white);
+    border-radius:16px;
+    padding:14px 18px;
+    box-shadow:0 4px 0 rgba(43,45,66,0.08);
+    min-width:100px;
+  }
+  .stat-box b{display:block; font-family:'Jua', sans-serif; font-size:27px; color:var(--grape);}
+  .stat-box span{font-size:15px; color:var(--navy-soft);}
+  .result-btns{display:flex; flex-direction:column; gap:10px;}
+  .btn-primary{
+    display:block;
+    width:100%;
+    padding:16px 0;
+    border:none;
+    border-radius:18px;
+    background:var(--coral);
+    box-shadow:0 4px 0 var(--coral-deep);
+    color:var(--white);
+    font-family:'Jua', sans-serif;
+    font-size:21px;
+    cursor:pointer;
+  }
+  .btn-secondary{
+    display:block;
+    width:100%;
+    padding:16px 0;
+    border:none;
+    border-radius:18px;
+    background:var(--white);
+    box-shadow:0 4px 0 rgba(43,45,66,0.10);
+    color:var(--navy);
+    font-family:'Jua', sans-serif;
+    font-size:20px;
+    cursor:pointer;
+  }
+  .btn-primary:active,.btn-secondary:active{transform:translateY(3px);}
+</style>
+</head>
+<body>
+<div class="app">
+  <button class="sound-toggle" id="sound-toggle" aria-label="소리 끄기"></button>
+
+
+  <!-- 닉네임 입력 화면 -->
+  <div class="screen" id="screen-nickname">
+    <div class="hero">
+      <div class="mascot-wrap">
+        <svg class="mascot float" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="100" cy="185" rx="55" ry="10" fill="#2B2D42" opacity="0.08"/>
+          <circle cx="100" cy="105" r="70" fill="#7B6FDE"/>
+          <path d="M55 55 L48 22 L78 46 Z" fill="#7B6FDE"/>
+          <path d="M145 55 L152 22 L122 46 Z" fill="#7B6FDE"/>
+          <circle cx="72" cy="100" r="15" fill="#FFFFFF"/>
+          <circle cx="128" cy="100" r="15" fill="#FFFFFF"/>
+          <circle cx="75" cy="102" r="7" fill="#2B2D42"/>
+          <circle cx="125" cy="102" r="7" fill="#2B2D42"/>
+          <path d="M78 132 Q100 152 122 132" stroke="#2B2D42" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <circle cx="55" cy="122" r="10" fill="#FF6B6B" opacity="0.55"/>
+          <circle cx="145" cy="122" r="10" fill="#FF6B6B" opacity="0.55"/>
+        </svg>
+      </div>
+      <h1>구구단 몬스터</h1>
+      <p>이름을 알려주면 몬스터가 불러줄게!</p>
+    </div>
+    <p class="section-label">이름이 뭐야?</p>
+    <input type="text" id="nickname-input" class="nickname-input" placeholder="이름을 입력해줘" maxlength="8">
+    <p class="hint nickname-error" id="nickname-error" style="display:none;">이름을 입력해줘</p>
+    <button class="start-btn" id="nickname-confirm">시작하기</button>
+  </div>
+
+  <!-- 시작 화면 -->
+  <div class="screen active" id="screen-start">
+    <div class="hero">
+      <div class="mascot-wrap">
+        <svg class="mascot float" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="mascot-start">
+          <ellipse cx="100" cy="185" rx="55" ry="10" fill="#2B2D42" opacity="0.08"/>
+          <circle id="body-start" cx="100" cy="105" r="70" fill="#7B6FDE"/>
+          <path id="horn-l-start" d="M55 55 L48 22 L78 46 Z" fill="#7B6FDE"/>
+          <path id="horn-r-start" d="M145 55 L152 22 L122 46 Z" fill="#7B6FDE"/>
+          <g id="deco-wings-start" style="display:none">
+            <path d="M32 100 Q4 90 12 130 Q28 140 38 118 Z" fill="#FFFFFF" opacity="0.85"/>
+            <path d="M168 100 Q196 90 188 130 Q172 140 162 118 Z" fill="#FFFFFF" opacity="0.85"/>
+          </g>
+          <circle cx="72" cy="100" r="15" fill="#FFFFFF"/>
+          <circle cx="128" cy="100" r="15" fill="#FFFFFF"/>
+          <circle cx="75" cy="102" r="7" fill="#2B2D42"/>
+          <circle cx="125" cy="102" r="7" fill="#2B2D42"/>
+          <path d="M78 132 Q100 152 122 132" stroke="#2B2D42" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <circle cx="55" cy="122" r="10" fill="#FF6B6B" opacity="0.55"/>
+          <circle cx="145" cy="122" r="10" fill="#FF6B6B" opacity="0.55"/>
+          <g id="deco-leaf-start" style="display:none">
+            <path d="M88 40 Q100 12 112 40 Q100 52 88 40 Z" fill="#3FAE60"/>
+            <path d="M100 40 L100 52" stroke="#2FA749" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <g id="deco-crown-start" style="display:none">
+            <path d="M76 34 L82 14 L94 30 L100 10 L106 30 L118 14 L124 34 Z" fill="#F5B700" stroke="#C98F00" stroke-width="2" stroke-linejoin="round"/>
+            <circle class="sparkle" cx="36" cy="70" r="4" fill="#FFD93D"/>
+            <circle class="sparkle" cx="164" cy="58" r="3.5" fill="#FFD93D"/>
+            <circle class="sparkle" cx="150" cy="150" r="3" fill="#FFD93D"/>
+          </g>
+        </svg>
+      </div>
+      <h1>구구단 몬스터</h1>
+      <p id="hero-greeting">문제를 맞히고 몬스터를 신나게 만들어줘!</p>
+      <div class="level-card" id="level-card">
+        <div class="nickname-tag" id="nickname-tag"></div>
+        <div class="level-card-top">
+          <span class="level-badge" id="level-badge">Lv.1</span>
+          <span class="level-name" id="level-name">아기 몬스터</span>
+        </div>
+        <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+        <div class="xp-text" id="xp-text">다음 레벨까지 60 XP</div>
+      </div>
+      <div class="attendance-card" id="attendance-card">
+        <div class="attendance-head">
+          <span class="attendance-title">출석 도장</span>
+          <span class="attendance-streak" id="attendance-streak">연속 0일째 출석 중</span>
+        </div>
+        <div class="att-grid" id="attendance-grid"></div>
+        <div class="attendance-total" id="attendance-total">총 0일 출석</div>
+      </div>
+    </div>
+
+    <p class="section-label">몇 단을 연습할까?</p>
+    <div class="dan-grid" id="dan-grid"></div>
+    <button class="all-btn" id="all-btn">전체 단 랜덤 섞기</button>
+
+    <button class="start-btn" id="start-btn" disabled>게임 시작!</button>
+    <p class="hint" id="start-hint">단을 하나 이상 골라줘</p>
+    <div class="reset-wrap">
+      <button class="reset-link" id="change-nickname">이름 바꾸기</button>
+      <button class="reset-link" id="reset-progress">레벨·출석 기록 초기화</button>
+      <div class="reset-confirm" id="reset-confirm">
+        <span>정말 초기화할까요?</span>
+        <button class="reset-yes" id="reset-yes">예</button>
+        <button class="reset-no" id="reset-no">아니오</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 게임 화면 -->
+  <div class="screen" id="screen-game">
+    <div class="game-top">
+      <div class="pill">Lv <b id="game-level">1</b></div>
+      <div class="pill">문제 <b id="q-index">1</b>/<span id="q-total">10</span></div>
+      <div class="pill">점수 <b id="q-score">0</b></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <div class="mascot-stage">
+      <div class="speech" id="speech">화이팅!</div>
+      <svg class="mascot" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="mascot-game">
+        <ellipse cx="100" cy="185" rx="55" ry="10" fill="#2B2D42" opacity="0.08"/>
+        <circle id="body-game" cx="100" cy="105" r="65" fill="#7B6FDE"/>
+        <path id="horn-l-game" d="M58 58 L52 28 L80 50 Z" fill="#7B6FDE"/>
+        <path id="horn-r-game" d="M142 58 L148 28 L120 50 Z" fill="#7B6FDE"/>
+        <g id="deco-wings-game" style="display:none">
+          <path d="M36 100 Q8 90 16 128 Q32 138 42 116 Z" fill="#FFFFFF" opacity="0.85"/>
+          <path d="M164 100 Q192 90 184 128 Q168 138 158 116 Z" fill="#FFFFFF" opacity="0.85"/>
+        </g>
+        <circle cx="75" cy="98" r="14" fill="#FFFFFF"/>
+        <circle cx="125" cy="98" r="14" fill="#FFFFFF"/>
+        <circle id="pupil-l" cx="78" cy="100" r="6.5" fill="#2B2D42"/>
+        <circle id="pupil-r" cx="128" cy="100" r="6.5" fill="#2B2D42"/>
+        <path id="mouth" d="M78 128 Q100 145 122 128" stroke="#2B2D42" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <g id="deco-leaf-game" style="display:none">
+          <path d="M90 44 Q100 18 110 44 Q100 55 90 44 Z" fill="#3FAE60"/>
+          <path d="M100 44 L100 55" stroke="#2FA749" stroke-width="3" stroke-linecap="round"/>
+        </g>
+        <g id="deco-crown-game" style="display:none">
+          <path d="M78 38 L84 20 L95 34 L100 16 L105 34 L116 20 L122 38 Z" fill="#F5B700" stroke="#C98F00" stroke-width="2" stroke-linejoin="round"/>
+          <circle class="sparkle" cx="40" cy="72" r="4" fill="#FFD93D"/>
+          <circle class="sparkle" cx="160" cy="62" r="3.5" fill="#FFD93D"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="question-card">
+      <div class="q" id="question-text">3 × 4 = ?</div>
+    </div>
+
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div class="screen" id="screen-end">
+    <div class="result-wrap">
+      <div class="stars">
+        <svg class="star" data-star="1" viewBox="0 0 24 24" fill="#FFD93D"><path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.7 7-6.3-4-6.3 4 1.7-7L2 9.5l7.1-.6z"/></svg>
+        <svg class="star" data-star="2" viewBox="0 0 24 24" fill="#FFD93D"><path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.7 7-6.3-4-6.3 4 1.7-7L2 9.5l7.1-.6z"/></svg>
+        <svg class="star" data-star="3" viewBox="0 0 24 24" fill="#FFD93D"><path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.7 7-6.3-4-6.3 4 1.7-7L2 9.5l7.1-.6z"/></svg>
+      </div>
+      <div class="result-title" id="result-title">참 잘했어요!</div>
+      <div class="result-sub" id="result-sub">몬스터가 활짝 웃었어요</div>
+      <div class="stat-row">
+        <div class="stat-box"><b id="final-score">0/10</b><span>정답 개수</span></div>
+        <div class="stat-box"><b id="final-streak">0</b><span>최고 연속정답</span></div>
+      </div>
+      <div class="result-btns">
+        <button class="btn-primary" id="retry-btn">같은 단 다시 도전</button>
+        <button class="btn-secondary" id="change-btn">다른 단 고르기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 레벨업 오버레이 -->
+  <div class="levelup-overlay" id="levelup-overlay">
+    <div class="levelup-card">
+      <div class="levelup-mascot-wrap">
+        <svg class="mascot" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="mascot-levelup">
+          <ellipse cx="100" cy="185" rx="55" ry="10" fill="#2B2D42" opacity="0.08"/>
+          <circle id="body-levelup" cx="100" cy="105" r="70" fill="#7B6FDE"/>
+          <path id="horn-l-levelup" d="M55 55 L48 22 L78 46 Z" fill="#7B6FDE"/>
+          <path id="horn-r-levelup" d="M145 55 L152 22 L122 46 Z" fill="#7B6FDE"/>
+          <g id="deco-wings-levelup" style="display:none">
+            <path d="M32 100 Q4 90 12 130 Q28 140 38 118 Z" fill="#FFFFFF" opacity="0.85"/>
+            <path d="M168 100 Q196 90 188 130 Q172 140 162 118 Z" fill="#FFFFFF" opacity="0.85"/>
+          </g>
+          <circle cx="72" cy="100" r="15" fill="#FFFFFF"/>
+          <circle cx="128" cy="100" r="15" fill="#FFFFFF"/>
+          <circle cx="75" cy="102" r="7" fill="#2B2D42"/>
+          <circle cx="125" cy="102" r="7" fill="#2B2D42"/>
+          <path d="M76 126 Q100 150 124 126" stroke="#2B2D42" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <circle cx="55" cy="122" r="10" fill="#FF6B6B" opacity="0.55"/>
+          <circle cx="145" cy="122" r="10" fill="#FF6B6B" opacity="0.55"/>
+          <g id="deco-leaf-levelup" style="display:none">
+            <path d="M88 40 Q100 12 112 40 Q100 52 88 40 Z" fill="#3FAE60"/>
+            <path d="M100 40 L100 52" stroke="#2FA749" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <g id="deco-crown-levelup" style="display:none">
+            <path d="M76 34 L82 14 L94 30 L100 10 L106 30 L118 14 L124 34 Z" fill="#F5B700" stroke="#C98F00" stroke-width="2" stroke-linejoin="round"/>
+            <circle class="sparkle" cx="36" cy="70" r="4" fill="#FFD93D"/>
+            <circle class="sparkle" cx="164" cy="58" r="3.5" fill="#FFD93D"/>
+            <circle class="sparkle" cx="150" cy="150" r="3" fill="#FFD93D"/>
+          </g>
+        </svg>
+      </div>
+      <div class="levelup-label">레벨업!</div>
+      <div class="levelup-name" id="levelup-name">Lv.2 무럭무럭 몬스터</div>
+      <button class="btn-primary" id="levelup-confirm">신난다!</button>
+    </div>
+  </div>
+
+  <!-- 출석 완료 팝업 -->
+  <div class="levelup-overlay" id="attendance-overlay">
+    <div class="levelup-card">
+      <div class="attendance-stamp-big" id="attendance-stamp-big"></div>
+      <div class="levelup-label">출석 완료!</div>
+      <div class="levelup-name" id="attendance-message">연속 1일째 출석 중이에요</div>
+      <button class="btn-primary" id="attendance-confirm">좋아!</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var state = {
+    selectedDan: new Set(),
+    allMode:false,
+    questions: [],
+    index: 0,
+    score: 0,
+    streak: 0,
+    maxStreak: 0,
+    answered: false,
+    pendingLevelUp: null
+  };
+
+  // ---- 사운드 & 음성 시스템 ----
+  var soundOn = true;
+  var audioCtx = null;
+  var koVoice = null;
+
+  function ensureAudioCtx(){
+    if (!audioCtx){
+      try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ audioCtx = null; }
+    }
+    if (audioCtx && audioCtx.state === 'suspended'){
+      try{ audioCtx.resume(); }catch(e){}
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq, duration, type, delay, volume){
+    if (!soundOn) return;
+    var ctx = ensureAudioCtx();
+    if (!ctx) return;
+    var startTime = ctx.currentTime + (delay || 0);
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, startTime);
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(volume || 0.2, startTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.03);
+  }
+
+  function playClickSound(){ playTone(880, 0.08, 'square', 0, 0.10); }
+  function playCorrectSound(){
+    playTone(660, 0.12, 'sine', 0, 0.16);
+    playTone(880, 0.14, 'sine', 0.10, 0.16);
+    playTone(1100, 0.18, 'sine', 0.20, 0.16);
+  }
+  function playWrongSound(){
+    playTone(320, 0.18, 'sine', 0, 0.14);
+    playTone(240, 0.22, 'sine', 0.12, 0.11);
+  }
+  function playLevelUpSound(){
+    playTone(523, 0.12, 'triangle', 0, 0.18);
+    playTone(659, 0.12, 'triangle', 0.12, 0.18);
+    playTone(784, 0.12, 'triangle', 0.24, 0.18);
+    playTone(1046, 0.22, 'triangle', 0.36, 0.20);
+  }
+  function playStampSound(){
+    playTone(200, 0.10, 'square', 0, 0.18);
+    playTone(150, 0.12, 'square', 0.06, 0.14);
+  }
+
+  function playClapAt(ctx, time){
+    var bufferSize = Math.floor(ctx.sampleRate * 0.05);
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++){ data[i] = Math.random() * 2 - 1; }
+    var noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 1100 + Math.random() * 900;
+    filter.Q.value = 0.8;
+    var gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.linearRampToValueAtTime(0.32, time + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.09);
+    noise.connect(filter).connect(gain).connect(ctx.destination);
+    noise.start(time);
+    noise.stop(time + 0.1);
+  }
+  function playApplauseSound(){
+    if (!soundOn) return;
+    var ctx = ensureAudioCtx();
+    if (!ctx) return;
+    var claps = 8;
+    for (var i = 0; i < claps; i++){
+      playClapAt(ctx, ctx.currentTime + i * 0.09 + Math.random() * 0.03);
+    }
+  }
+
+  function pickKoreanVoice(){
+    if (!window.speechSynthesis) return;
+    var voices = speechSynthesis.getVoices();
+    koVoice = voices.find(function(v){ return v.lang === 'ko-KR'; })
+      || voices.find(function(v){ return v.lang && v.lang.indexOf('ko') === 0; })
+      || null;
+  }
+  if (window.speechSynthesis){
+    pickKoreanVoice();
+    speechSynthesis.onvoiceschanged = pickKoreanVoice;
+  }
+
+  function speak(text){
+    if (!soundOn || !window.speechSynthesis) return;
+    try{
+      speechSynthesis.cancel();
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'ko-KR';
+      if (koVoice) utter.voice = koVoice;
+      utter.pitch = 1.35;
+      utter.rate = 1.02;
+      utter.volume = 1;
+      speechSynthesis.speak(utter);
+    }catch(e){
+      // 음성 합성을 지원하지 않는 환경에서는 조용히 무시
+    }
+  }
+
+  var ICON_SOUND_ON = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="#2B2D42"/><path d="M16.2 8.7a5 5 0 010 6.6" stroke="#2B2D42" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M19 6.2a9 9 0 010 11.6" stroke="#2B2D42" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/></svg>';
+  var ICON_SOUND_OFF = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 9v6h4l5 5V4L8 9H4z" fill="#2B2D42"/><path d="M16 9l5 6M21 9l-5 6" stroke="#2B2D42" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+
+  function updateSoundToggleUI(){
+    var btn = document.getElementById('sound-toggle');
+    if (!btn) return;
+    btn.innerHTML = soundOn ? ICON_SOUND_ON : ICON_SOUND_OFF;
+    btn.setAttribute('aria-label', soundOn ? '소리 끄기' : '소리 켜기');
+  }
+
+  function loadSoundSetting(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEYS.sound);
+      if (raw === 'off') soundOn = false;
+    }catch(e){
+      // 저장된 설정이 없으면 기본값(소리 켜짐) 사용
+    }
+    updateSoundToggleUI();
+  }
+
+  document.getElementById('sound-toggle').addEventListener('click', function(){
+    soundOn = !soundOn;
+    updateSoundToggleUI();
+    try{
+      localStorage.setItem(STORAGE_KEYS.sound, soundOn ? 'on' : 'off');
+    }catch(e){}
+    if (soundOn) playClickSound();
+  });
+
+  // ---- 닉네임 시스템 ----
+  var nickname = '';
+
+  function applyNicknameUI(){
+    var greetingEl = document.getElementById('hero-greeting');
+    if (greetingEl) greetingEl.textContent = nickname + '야, 문제를 맞히고 몬스터를 신나게 키워보자!';
+    var tagEl = document.getElementById('nickname-tag');
+    if (tagEl) tagEl.textContent = nickname + '의 몬스터';
+  }
+
+  function loadNickname(){
+    try{
+      var saved = localStorage.getItem(STORAGE_KEYS.nickname);
+      if (saved) nickname = saved;
+    }catch(e){
+      // 저장된 이름이 없으면 닉네임 입력 화면부터 시작
+    }
+    if (nickname){
+      applyNicknameUI();
+      showScreen('start');
+      checkDailyAttendance();
+    } else {
+      showScreen('nickname');
+    }
+  }
+
+  document.getElementById('nickname-confirm').addEventListener('click', function(){
+    playClickSound();
+    var val = document.getElementById('nickname-input').value.trim();
+    var errorEl = document.getElementById('nickname-error');
+    if (!val){
+      errorEl.style.display = 'block';
+      return;
+    }
+    errorEl.style.display = 'none';
+    nickname = val;
+    try{ localStorage.setItem(STORAGE_KEYS.nickname, nickname); }catch(e){}
+    applyNicknameUI();
+    speak(nickname + '야 반가워!');
+    showScreen('start');
+    checkDailyAttendance();
+  });
+
+  document.getElementById('nickname-input').addEventListener('input', function(){
+    document.getElementById('nickname-error').style.display = 'none';
+  });
+
+  document.getElementById('change-nickname').addEventListener('click', function(){
+    playClickSound();
+    document.getElementById('nickname-input').value = nickname;
+    document.getElementById('nickname-error').style.display = 'none';
+    showScreen('nickname');
+  });
+
+  // ---- 레벨/XP 시스템 (최대 1000레벨) ----
+  var MAX_LEVEL = 1000;
+  var NAME_TIERS = [
+    {minLevel:1, name:'아기 몬스터'},
+    {minLevel:10, name:'무럭무럭 몬스터'},
+    {minLevel:30, name:'씩씩한 몬스터'},
+    {minLevel:60, name:'반짝반짝 몬스터'},
+    {minLevel:100, name:'구구단 박사 몬스터'},
+    {minLevel:300, name:'구구단 마스터 몬스터'},
+    {minLevel:600, name:'전설의 몬스터'},
+    {minLevel:1000, name:'구구단의 전설'}
+  ];
+  var COLOR_STEPS = ['#9C90F0','#7B6FDE','#4ECDC4','#3FB6A8','#FF9F45','#FF6B6B','#E24A4A','#5B4FC4','#FFD93D','#F5B700'];
+
+  function getLevelMeta(level){
+    var name = NAME_TIERS[0].name;
+    for (var i = 0; i < NAME_TIERS.length; i++){
+      if (level >= NAME_TIERS[i].minLevel) name = NAME_TIERS[i].name;
+    }
+    var colorIdx = Math.min(Math.floor((level - 1) / 100), COLOR_STEPS.length - 1);
+    return {
+      name: name,
+      color: COLOR_STEPS[colorIdx],
+      hasLeaf: level >= 10,
+      hasWings: level >= 30,
+      hasCrown: level >= 60
+    };
+  }
+
+  // 레벨업에 필요한 누적 XP를 미리 계산 (레벨 n -> n+1 에 필요한 XP는 15+n)
+  var XP_THRESHOLDS = [0];
+  for (var lv = 1; lv < MAX_LEVEL; lv++){
+    XP_THRESHOLDS[lv] = XP_THRESHOLDS[lv-1] + (15 + lv);
+  }
+
+  var progress = { totalXP: 0 };
+
+  // ---- 로컬 저장소 (기기에 실제로 기록이 남도록 localStorage 사용) ----
+  var STORAGE_KEYS = {
+    progress: 'monster-progress-v1',
+    attendance: 'monster-attendance-v1',
+    sound: 'monster-sound-v1',
+    nickname: 'monster-nickname-v1'
+  };
+
+  // ---- 출석 도장 시스템 ----
+  var attendanceDates = new Set();
+  var STAMP_SVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#4ECDC4"/><path d="M7 12.5 L10.5 16 L17 8.5" stroke="#FFFFFF" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function dateKey(d){
+    var y = d.getFullYear();
+    var m = String(d.getMonth()+1).padStart(2,'0');
+    var day = String(d.getDate()).padStart(2,'0');
+    return y + '-' + m + '-' + day;
+  }
+  function todayKey(){ return dateKey(new Date()); }
+
+  function getWeekDates(){
+    var now = new Date();
+    var dow = now.getDay();
+    var week = [];
+    for (var i = 0; i < 7; i++){
+      var d = new Date(now);
+      d.setDate(now.getDate() - dow + i);
+      week.push(d);
+    }
+    return week;
+  }
+
+  function computeStreak(){
+    var streak = 0;
+    var d = new Date();
+    while (attendanceDates.has(dateKey(d))){
+      streak++;
+      d.setDate(d.getDate() - 1);
+    }
+    return streak;
+  }
+
+  function loadAttendance(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEYS.attendance);
+      if (raw){
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr)) arr.forEach(function(d){ attendanceDates.add(d); });
+      }
+    }catch(e){
+      // 저장된 출석 기록이 없으면 빈 기록으로 시작
+    }
+  }
+
+  function saveAttendance(){
+    try{
+      localStorage.setItem(STORAGE_KEYS.attendance, JSON.stringify(Array.from(attendanceDates)));
+    }catch(e){
+      // 저장 실패 시 이번 세션에서는 계속 플레이 가능
+    }
+  }
+
+  function renderAttendanceUI(){
+    var grid = document.getElementById('attendance-grid');
+    var dowLabels = ['일','월','화','수','목','금','토'];
+    var today = todayKey();
+    grid.innerHTML = '';
+    getWeekDates().forEach(function(d, idx){
+      var key = dateKey(d);
+      var stamped = attendanceDates.has(key);
+      var isToday = key === today;
+      var cell = document.createElement('div');
+      cell.className = 'att-cell' + (stamped ? ' stamped' : '') + (isToday ? ' today' : '');
+      cell.innerHTML =
+        '<span class="att-dow">' + dowLabels[idx] + '</span>' +
+        '<span class="att-stamp">' + (stamped ? STAMP_SVG : '') + '</span>' +
+        '<span class="att-date">' + d.getDate() + '</span>';
+      grid.appendChild(cell);
+    });
+    document.getElementById('attendance-streak').textContent = '연속 ' + computeStreak() + '일째 출석 중';
+    document.getElementById('attendance-total').textContent = '총 ' + attendanceDates.size + '일 출석';
+  }
+
+  function checkDailyAttendance(){
+    var today = todayKey();
+    if (attendanceDates.has(today)) return;
+    attendanceDates.add(today);
+    saveAttendance();
+    renderAttendanceUI();
+    var streak = computeStreak();
+    var leveledInfo = addXP(15);
+    showAttendancePopup(streak, leveledInfo);
+  }
+
+  function showAttendancePopup(streak, pendingLevel){
+    document.getElementById('attendance-stamp-big').innerHTML = STAMP_SVG;
+    var msg = '연속 ' + streak + '일째 출석 중이에요';
+    document.getElementById('attendance-message').textContent = msg + ' (+15 XP)';
+    playStampSound();
+    speak('출석 완료! ' + msg);
+    var overlay = document.getElementById('attendance-overlay');
+    overlay.classList.add('show');
+    document.getElementById('attendance-confirm').onclick = function(){
+      playClickSound();
+      overlay.classList.remove('show');
+      if (pendingLevel) showLevelUp(pendingLevel, function(){});
+    };
+  }
+
+  function getLevelInfo(totalXP){
+    var lvl = 1;
+    for (var i = MAX_LEVEL; i >= 1; i--){
+      if (totalXP >= XP_THRESHOLDS[i-1]) { lvl = i; break; }
+    }
+    var meta = getLevelMeta(lvl);
+    var isMax = lvl === MAX_LEVEL;
+    var floor = XP_THRESHOLDS[lvl-1];
+    var ceil = isMax ? floor : XP_THRESHOLDS[lvl];
+    var xpIntoLevel = totalXP - floor;
+    var xpForNext = isMax ? 0 : ceil - floor;
+    var progressPct = isMax ? 100 : Math.round((xpIntoLevel / xpForNext) * 100);
+    return {
+      level: lvl, name: meta.name, color: meta.color, isMax: isMax,
+      hasLeaf: meta.hasLeaf, hasWings: meta.hasWings, hasCrown: meta.hasCrown,
+      progressPct: progressPct, xpIntoLevel: xpIntoLevel, xpForNext: xpForNext
+    };
+  }
+
+  function applyLevelVisual(info, suffix){
+    var body = document.getElementById('body-' + suffix);
+    var hornL = document.getElementById('horn-l-' + suffix);
+    var hornR = document.getElementById('horn-r-' + suffix);
+    if (body) body.setAttribute('fill', info.color);
+    if (hornL) hornL.setAttribute('fill', info.color);
+    if (hornR) hornR.setAttribute('fill', info.color);
+    var leaf = document.getElementById('deco-leaf-' + suffix);
+    var wings = document.getElementById('deco-wings-' + suffix);
+    var crown = document.getElementById('deco-crown-' + suffix);
+    if (leaf) leaf.style.display = info.hasLeaf ? '' : 'none';
+    if (wings) wings.style.display = info.hasWings ? '' : 'none';
+    if (crown) crown.style.display = info.hasCrown ? '' : 'none';
+  }
+
+  function renderMascotAll(){
+    var info = getLevelInfo(progress.totalXP);
+    applyLevelVisual(info, 'start');
+    applyLevelVisual(info, 'game');
+  }
+
+  function renderLevelUI(){
+    var info = getLevelInfo(progress.totalXP);
+    document.getElementById('level-badge').textContent = 'Lv.' + info.level;
+    document.getElementById('level-name').textContent = info.name;
+    document.getElementById('xp-fill').style.width = info.progressPct + '%';
+    document.getElementById('xp-text').textContent = info.isMax
+      ? '최고 레벨을 달성했어요!'
+      : ('다음 레벨까지 ' + (info.xpForNext - info.xpIntoLevel) + ' XP');
+    var gameLevelEl = document.getElementById('game-level');
+    if (gameLevelEl) gameLevelEl.textContent = info.level;
+  }
+
+  function saveProgress(){
+    try{
+      localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify({ totalXP: progress.totalXP }));
+    }catch(e){
+      // 저장 실패 시 이번 세션에서는 계속 플레이 가능
+    }
+  }
+
+  function loadProgress(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEYS.progress);
+      if (raw){
+        var parsed = JSON.parse(raw);
+        if (typeof parsed.totalXP === 'number') progress.totalXP = parsed.totalXP;
+      }
+    }catch(e){
+      // 저장된 기록이 없으면 기본값으로 시작
+    }
+    renderLevelUI();
+    renderMascotAll();
+    loadAttendance();
+    renderAttendanceUI();
+  }
+
+  function addXP(amount){
+    var before = getLevelInfo(progress.totalXP).level;
+    progress.totalXP += amount;
+    var after = getLevelInfo(progress.totalXP);
+    saveProgress();
+    renderLevelUI();
+    renderMascotAll();
+    return after.level > before ? after : null;
+  }
+
+  var screens = {
+    nickname: document.getElementById('screen-nickname'),
+    start: document.getElementById('screen-start'),
+    game: document.getElementById('screen-game'),
+    end: document.getElementById('screen-end')
+  };
+  function showScreen(name){
+    Object.values(screens).forEach(function(s){ s.classList.remove('active'); });
+    screens[name].classList.add('active');
+  }
+
+  // ---- 단 선택 그리드 생성 ----
+  var danGrid = document.getElementById('dan-grid');
+  var danLabels = {2:'이단',3:'삼단',4:'사단',5:'오단',6:'육단',7:'칠단',8:'팔단',9:'구단'};
+  for (var d=2; d<=9; d++){
+    (function(dan){
+      var btn = document.createElement('button');
+      btn.className = 'dan-btn';
+      btn.innerHTML = dan + '단<span>' + danLabels[dan] + '</span>';
+      btn.addEventListener('click', function(){
+        playClickSound();
+        state.allMode = false;
+        document.getElementById('all-btn').classList.remove('selected');
+        if (state.selectedDan.has(dan)){
+          state.selectedDan.delete(dan);
+          btn.classList.remove('selected');
+        } else {
+          state.selectedDan.add(dan);
+          btn.classList.add('selected');
+        }
+        updateStartBtn();
+      });
+      danGrid.appendChild(btn);
+    })(d);
+  }
+
+  var allBtn = document.getElementById('all-btn');
+  allBtn.addEventListener('click', function(){
+    playClickSound();
+    state.allMode = !state.allMode;
+    allBtn.classList.toggle('selected', state.allMode);
+    if (state.allMode){
+      state.selectedDan.clear();
+      document.querySelectorAll('.dan-btn').forEach(function(b){ b.classList.remove('selected'); });
+    }
+    updateStartBtn();
+  });
+
+  var startBtn = document.getElementById('start-btn');
+  var startHint = document.getElementById('start-hint');
+  function updateStartBtn(){
+    var ready = state.allMode || state.selectedDan.size > 0;
+    startBtn.disabled = !ready;
+    startHint.textContent = ready ? '준비 완료! 시작해볼까?' : '단을 하나 이상 골라줘';
+  }
+
+  // ---- 문제 생성 ----
+  function buildQuestionPool(){
+    var dans = state.allMode ? [2,3,4,5,6,7,8,9] : Array.from(state.selectedDan);
+    var pool = [];
+    dans.forEach(function(a){
+      for (var b=1; b<=9; b++){
+        pool.push([a,b]);
+      }
+    });
+    // 셔플
+    for (var i = pool.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i+1));
+      var tmp = pool[i]; pool[i] = pool[j]; pool[j] = tmp;
+    }
+    var count = Math.min(10, pool.length);
+    var chosen = pool.slice(0, count);
+    return chosen.map(function(pair){
+      var answer = pair[0] * pair[1];
+      var choices = new Set([answer]);
+      while (choices.size < 4){
+        var offset = Math.floor(Math.random()*9) - 4;
+        var wrong = answer + offset;
+        if (wrong > 0 && wrong !== answer) choices.add(wrong);
+      }
+      var arr = Array.from(choices);
+      for (var k = arr.length - 1; k > 0; k--){
+        var m = Math.floor(Math.random() * (k+1));
+        var t = arr[k]; arr[k] = arr[m]; arr[m] = t;
+      }
+      return { a: pair[0], b: pair[1], answer: answer, choices: arr };
+    });
+  }
+
+  startBtn.addEventListener('click', function(){
+    if (startBtn.disabled) return;
+    playClickSound();
+    state.questions = buildQuestionPool();
+    state.index = 0;
+    state.score = 0;
+    state.streak = 0;
+    state.maxStreak = 0;
+    document.getElementById('q-total').textContent = state.questions.length;
+    showScreen('game');
+    renderQuestion();
+  });
+
+  // ---- 게임 화면 ----
+  var qIndexEl = document.getElementById('q-index');
+  var qScoreEl = document.getElementById('q-score');
+  var progressFill = document.getElementById('progress-fill');
+  var questionText = document.getElementById('question-text');
+  var choicesEl = document.getElementById('choices');
+  var speech = document.getElementById('speech');
+  var pupilL = document.getElementById('pupil-l');
+  var pupilR = document.getElementById('pupil-r');
+  var mouth = document.getElementById('mouth');
+  var mascotGame = document.getElementById('mascot-game');
+
+  function getCheerLines(){
+    var name = nickname || '너';
+    return [
+      '정답이야!','최고야!','바로 그거지!','대단한걸!','참 잘했어!',
+      '역시 ' + name + '!','완전 똑똑해!','굿잡!','최고의 실력이야!','천재인가봐!'
+    ];
+  }
+  function getMissLines(){
+    var name = nickname || '너';
+    return [
+      '괜찮아, 다시 해보자!','아쉬워, 다음엔 꼭!','조금만 더 생각해봐!','실수해도 괜찮아!','다음 문제 화이팅!',
+      '천천히 다시 해보자!', name + '는 할 수 있어!','다시 도전해보자!','거의 다 왔어!','포기하지 마!'
+    ];
+  }
+
+  function setMascotMood(mood){
+    if (mood === 'happy'){
+      mouth.setAttribute('d','M76 126 Q100 150 124 126');
+      pupilL.setAttribute('r','5.5'); pupilR.setAttribute('r','5.5');
+    } else if (mood === 'sad'){
+      mouth.setAttribute('d','M78 138 Q100 122 122 138');
+    } else {
+      mouth.setAttribute('d','M78 128 Q100 145 122 128');
+      pupilL.setAttribute('r','6.5'); pupilR.setAttribute('r','6.5');
+    }
+  }
+
+  function renderQuestion(){
+    state.answered = false;
+    var q = state.questions[state.index];
+    qIndexEl.textContent = state.index + 1;
+    qScoreEl.textContent = state.score;
+    progressFill.style.width = Math.round((state.index / state.questions.length) * 100) + '%';
+    questionText.textContent = q.a + ' × ' + q.b + ' = ?';
+    setMascotMood('neutral');
+    speech.classList.remove('show', 'correct', 'wrong');
+
+    choicesEl.innerHTML = '';
+    q.choices.forEach(function(choice){
+      var btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = choice;
+      btn.addEventListener('click', function(){ handleAnswer(choice, btn); });
+      choicesEl.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(choice, btnEl){
+    if (state.answered) return;
+    state.answered = true;
+    var q = state.questions[state.index];
+    var allBtns = choicesEl.querySelectorAll('.choice-btn');
+    allBtns.forEach(function(b){ b.disabled = true; });
+
+    if (choice === q.answer){
+      state.score++;
+      state.streak++;
+      state.maxStreak = Math.max(state.maxStreak, state.streak);
+      btnEl.classList.add('correct');
+      mascotGame.classList.add('bounce');
+      setMascotMood('happy');
+      playCorrectSound();
+
+      var xpGain = 10;
+      var isCombo = state.streak > 0 && state.streak % 3 === 0;
+      if (isCombo) xpGain += 15;
+      var leveledInfo = addXP(xpGain);
+      if (leveledInfo) state.pendingLevelUp = leveledInfo;
+
+      var praiseMsg = isCombo ? ('콤보 ' + state.streak + '!') : getCheerLines()[Math.floor(Math.random()*getCheerLines().length)];
+      speech.textContent = praiseMsg + ' +' + xpGain + ' XP';
+      speak(praiseMsg);
+    } else {
+      state.streak = 0;
+      btnEl.classList.add('wrong');
+      mascotGame.classList.add('shake');
+      setMascotMood('sad');
+      playWrongSound();
+      var comfortMsg = getMissLines()[Math.floor(Math.random()*getMissLines().length)];
+      speech.textContent = comfortMsg;
+      speak(comfortMsg);
+      allBtns.forEach(function(b){
+        if (parseInt(b.textContent,10) === q.answer) b.classList.add('correct');
+      });
+    }
+    speech.classList.add('show', choice === q.answer ? 'correct' : 'wrong');
+    qScoreEl.textContent = state.score;
+
+    setTimeout(function(){
+      mascotGame.classList.remove('bounce','shake');
+      state.index++;
+      function advance(){
+        if (state.index >= state.questions.length){
+          showResult();
+        } else {
+          renderQuestion();
+        }
+      }
+      if (state.pendingLevelUp){
+        var info = state.pendingLevelUp;
+        state.pendingLevelUp = null;
+        showLevelUp(info, advance);
+      } else {
+        advance();
+      }
+    }, 1100);
+  }
+
+  // ---- 레벨업 오버레이 ----
+  var levelupOverlay = document.getElementById('levelup-overlay');
+  var levelupName = document.getElementById('levelup-name');
+  var levelupConfirm = document.getElementById('levelup-confirm');
+  var CONFETTI_COLORS = ['#FF6B6B','#FFD93D','#4ECDC4','#7B6FDE','#FF9F45'];
+  function spawnConfetti(container, count){
+    for (var i = 0; i < count; i++){
+      var piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      var size = 6 + Math.random() * 6;
+      var duration = 1.1 + Math.random() * 0.9;
+      var delay = Math.random() * 0.3;
+      piece.style.left = (Math.random() * 100) + '%';
+      piece.style.width = size + 'px';
+      piece.style.height = (size * 1.3) + 'px';
+      piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      piece.style.animationDuration = duration + 's';
+      piece.style.animationDelay = delay + 's';
+      container.appendChild(piece);
+      (function(p, removeAfter){
+        setTimeout(function(){ if (p.parentNode) p.parentNode.removeChild(p); }, removeAfter * 1000);
+      })(piece, duration + delay + 0.1);
+    }
+  }
+
+  function showLevelUp(info, onContinue){
+    applyLevelVisual(info, 'levelup');
+    levelupName.textContent = 'Lv.' + info.level + ' ' + info.name;
+    playLevelUpSound();
+    playApplauseSound();
+    speak('레벨업! ' + info.name + '이 되었어요!');
+    levelupOverlay.classList.add('show');
+    spawnConfetti(levelupOverlay, 30);
+    levelupConfirm.onclick = function(){
+      playClickSound();
+      levelupOverlay.classList.remove('show');
+      onContinue();
+    };
+  }
+
+  // ---- 결과 화면 ----
+  var starEls = document.querySelectorAll('.star');
+  var resultTitle = document.getElementById('result-title');
+  var resultSub = document.getElementById('result-sub');
+  var finalScore = document.getElementById('final-score');
+  var finalStreak = document.getElementById('final-streak');
+
+  function showResult(){
+    var total = state.questions.length;
+    var stars = state.score === total ? 3 : state.score >= Math.ceil(total*0.7) ? 2 : state.score >= Math.ceil(total*0.4) ? 1 : 0;
+    starEls.forEach(function(s){
+      s.classList.toggle('on', parseInt(s.dataset.star,10) <= stars);
+    });
+    finalScore.textContent = state.score + '/' + total;
+    finalStreak.textContent = state.maxStreak;
+
+    if (stars === 3){
+      resultTitle.textContent = '완벽해요, 구구단 박사!';
+      resultSub.textContent = '몬스터가 방방 뛰면서 좋아해요';
+    } else if (stars === 2){
+      resultTitle.textContent = '참 잘했어요!';
+      resultSub.textContent = '몬스터가 활짝 웃었어요';
+    } else if (stars === 1){
+      resultTitle.textContent = '조금만 더 연습해볼까?';
+      resultSub.textContent = '몬스터가 응원하고 있어요';
+    } else {
+      resultTitle.textContent = '다시 도전해봐!';
+      resultSub.textContent = '몬스터랑 한 번 더 연습해요';
+    }
+    showScreen('end');
+  }
+
+  document.getElementById('retry-btn').addEventListener('click', function(){
+    playClickSound();
+    state.questions = buildQuestionPool();
+    state.index = 0; state.score = 0; state.streak = 0; state.maxStreak = 0;
+    document.getElementById('q-total').textContent = state.questions.length;
+    showScreen('game');
+    renderQuestion();
+  });
+
+  document.getElementById('change-btn').addEventListener('click', function(){
+    playClickSound();
+    showScreen('start');
+  });
+
+  // ---- 레벨 기록 초기화 ----
+  var resetBtn = document.getElementById('reset-progress');
+  var resetConfirm = document.getElementById('reset-confirm');
+  resetBtn.addEventListener('click', function(){
+    playClickSound();
+    resetConfirm.style.display = 'block';
+    resetBtn.style.display = 'none';
+  });
+  document.getElementById('reset-no').addEventListener('click', function(){
+    playClickSound();
+    resetConfirm.style.display = 'none';
+    resetBtn.style.display = 'inline';
+  });
+  document.getElementById('reset-yes').addEventListener('click', function(){
+    playClickSound();
+    progress.totalXP = 0;
+    attendanceDates.clear();
+    try{
+      localStorage.removeItem(STORAGE_KEYS.progress);
+      localStorage.removeItem(STORAGE_KEYS.attendance);
+    }catch(e){
+      // 삭제 실패해도 화면상 초기화는 진행
+    }
+    renderLevelUI();
+    renderMascotAll();
+    renderAttendanceUI();
+    resetConfirm.style.display = 'none';
+    resetBtn.style.display = 'inline';
+  });
+
+  updateStartBtn();
+  loadSoundSetting();
+  loadProgress();
+  loadNickname();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('service-worker.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>
